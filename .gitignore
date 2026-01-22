@@ -36,6 +36,25 @@ yarn-error.log*
 # vercel
 .vercel
 
+# deployment logs
+/deploy_output.txt
+/deploy_v3.txt
+/deployments.txt
+/deployments_v2.txt
+/final_deploy.txt
+/full_output.txt
+/prod_deployments.txt
+/prod_v2.txt
+/prod_v3.txt
+/prod_v4.txt
+/build_log.txt
+/lint_errors.txt
+/lint_log.txt
+/lint_output.txt
+/lint_results.txt
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel
