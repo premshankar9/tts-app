@@ -1,0 +1,60 @@
+﻿
+> tts-app@0.1.0 lint
+> eslint
+
+
+C:\Users\user\OneDrive\Desktop\Gemini\tts-app\src\app\page.tsx
+  34:71  error    Unexpected any. Specify a different type                                                                                @typescript-eslint/no-explicit-any
+  58:8   warning  React Hook React.useEffect has a missing dependency: 'selectedVoice'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\user\OneDrive\Desktop\Gemini\tts-app\src\components\AudioPlayer.tsx
+   4:33  warning  'Volume2' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+  80:43  error    Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+C:\Users\user\OneDrive\Desktop\Gemini\tts-app\src\components\AudioPlayer.tsx:80:43
+  78 |                 <div className="flex-1 space-y-1">
+  79 |                     <div className="flex justify-between text-xs text-muted-foreground">
+> 80 |                         <span>{formatTime(audioRef.current?.currentTime || 0)}</span>
+     |                                           ^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  81 |                         <span>{formatTime(duration)}</span>
+  82 |                     </div>
+  83 |                     <div className="h-2 w-full bg-secondary rounded-full overflow-hidden relative">                    react-hooks/refs
+  80:43  error    Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+C:\Users\user\OneDrive\Desktop\Gemini\tts-app\src\components\AudioPlayer.tsx:80:43
+  78 |                 <div className="flex-1 space-y-1">
+  79 |                     <div className="flex justify-between text-xs text-muted-foreground">
+> 80 |                         <span>{formatTime(audioRef.current?.currentTime || 0)}</span>
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  81 |                         <span>{formatTime(duration)}</span>
+  82 |                     </div>
+  83 |                     <div className="h-2 w-full bg-secondary rounded-full overflow-hidden relative">       react-hooks/refs
+  80:43  error    Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+C:\Users\user\OneDrive\Desktop\Gemini\tts-app\src\components\AudioPlayer.tsx:80:43
+  78 |                 <div className="flex-1 space-y-1">
+  79 |                     <div className="flex justify-between text-xs text-muted-foreground">
+> 80 |                         <span>{formatTime(audioRef.current?.currentTime || 0)}</span>
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  81 |                         <span>{formatTime(duration)}</span>
+  82 |                     </div>
+  83 |                     <div className="h-2 w-full bg-secondary rounded-full overflow-hidden relative">  react-hooks/refs
+
+C:\Users\user\OneDrive\Desktop\Gemini\tts-app\src\components\VoiceSelector.tsx
+   4:10  warning  'Check' is defined but never used             @typescript-eslint/no-unused-vars
+   5:10  warning  'cn' is defined but never used                @typescript-eslint/no-unused-vars
+   6:10  warning  'Button' is defined but never used            @typescript-eslint/no-unused-vars
+  22:12  warning  'open' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  22:18  warning  'setOpen' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\user\OneDrive\Desktop\Gemini\tts-app\src\components\ui\input.tsx
+  5:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+Γ£û 12 problems (5 errors, 7 warnings)
+
