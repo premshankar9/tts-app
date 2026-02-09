@@ -4,25 +4,16 @@ import { NextRequest, NextResponse } from "next/server";
 function splitTextIntoChunks(text: string, maxLength: number = 200): string[] {
     const chunks: string[] = [];
     let currentChunk = "";
-
-    // Split by newlines first to respect paragraph breaks
     const paragraphs = text.split(/\r?\n/);
-
     for (const paragraph of paragraphs) {
         if (!paragraph.trim()) continue;
-
-        // Split paragraph by sentences
         const sentences = paragraph.split(/([.!?。！？]\s*)/);
-
         for (const sentence of sentences) {
             if (!sentence) continue;
-
             if ((currentChunk + sentence).length <= maxLength) {
                 currentChunk += sentence;
             } else {
                 if (currentChunk) chunks.push(currentChunk.trim());
-
-                // If a single sentence is too long, split it by words
                 if (sentence.length > maxLength) {
                     const words = sentence.split(/\s+/);
                     let subChunk = "";
@@ -50,10 +41,11 @@ function splitTextIntoChunks(text: string, maxLength: number = 200): string[] {
 }
 
 export async function POST(req: NextRequest) {
-    console.log("TTS Route Hit: Google Stability Mode (Chunking Restored)");
+    let actualVoiceId: string | undefined;
+
     try {
-        const { text, voiceId } = await req.json();
-        console.log("Params:", { textLength: text?.length, voiceId });
+        const body = await req.json();
+        const { text, voiceId } = body;
 
         if (!text || !voiceId) {
             return NextResponse.json(
@@ -62,14 +54,44 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const chunks = splitTextIntoChunks(text);
-        console.log(`Processing ${chunks.length} chunks...`);
+        // Check if this is an Edge Neural voice (Free & Keyless)
+        if (voiceId.endsWith("Neural")) {
+            try {
+                // Use edge-tts-universal for high quality free neural voices
+                const { EdgeTTS } = await import("edge-tts-universal");
+                const tts = new EdgeTTS(text, voiceId);
 
+                // Add a 15s timeout for synthesis to prevent indefinite hangs
+                const synthesisPromise = tts.synthesize();
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Synthesis Timeout (15s)")), 15000)
+                );
+
+                const result = await Promise.race([synthesisPromise, timeoutPromise]) as any;
+                const { audio } = result;
+                const arrayBuffer = await audio.arrayBuffer();
+                const buffer = Buffer.from(arrayBuffer);
+
+                return new NextResponse(buffer, {
+                    headers: {
+                        "Content-Type": "audio/mpeg",
+                        "Content-Disposition": `attachment; filename="edge_speech.mp3"`,
+                    },
+                });
+            } catch (edgeError: any) {
+                console.warn(`Edge TTS Failed (${edgeError.message}) - Falling back to Google TTS`);
+                // Map Edge voice ID to Google language code (e.g. "hi" from "hi-IN-...")
+                actualVoiceId = voiceId.split('-')[0];
+            }
+        }
+
+        // Standard Google TTS path (or Fallback path)
+        const targetVoiceId = actualVoiceId || voiceId;
+        const chunks = splitTextIntoChunks(text);
         const audioBuffers: ArrayBuffer[] = [];
 
         for (const chunk of chunks) {
-            const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=gtx&q=${encodeURIComponent(chunk)}&tl=${voiceId}`;
-
+            const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=gtx&q=${encodeURIComponent(chunk)}&tl=${targetVoiceId}`;
             const response = await fetch(googleUrl, {
                 headers: {
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
@@ -79,7 +101,7 @@ export async function POST(req: NextRequest) {
 
             if (!response.ok) {
                 console.error(`Google TTS Error for chunk: status ${response.status}`);
-                continue; // Skip failed chunk or decide to fail entirely
+                continue;
             }
 
             const buffer = await response.arrayBuffer();
@@ -90,7 +112,6 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Failed to generate any audio chunks" }, { status: 500 });
         }
 
-        // Combine all buffers
         const totalLength = audioBuffers.reduce((acc, buf) => acc + buf.byteLength, 0);
         const combinedBuffer = new Uint8Array(totalLength);
         let offset = 0;
@@ -106,10 +127,10 @@ export async function POST(req: NextRequest) {
             },
         });
 
-    } catch (error) {
-        console.error("TTS Error:", error);
+    } catch (error: any) {
+        console.error("Critical TTS Error:", error);
         return NextResponse.json(
-            { error: "Internal Server Error" },
+            { error: "Internal Server Error", detail: error.message },
             { status: 500 }
         );
     }

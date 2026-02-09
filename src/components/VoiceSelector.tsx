@@ -19,6 +19,7 @@ interface VoiceSelectorProps {
 export function VoiceSelector({ voices = [], selectedVoiceId, onVoiceSelect, isLoading }: VoiceSelectorProps) {
     // Group voices
     const premade = voices.filter(v => v.category === "premade");
+    const generated = voices.filter(v => v.category === "generated");
     const cloned = voices.filter(v => v.category === "cloned");
 
     return (
@@ -33,8 +34,17 @@ export function VoiceSelector({ voices = [], selectedVoiceId, onVoiceSelect, isL
                 >
                     <option value="" disabled>Select a voice...</option>
                     {premade.length > 0 && (
-                        <optgroup label="Pre-made Voices">
+                        <optgroup label="Basic Voices (Free)">
                             {premade.map((voice) => (
+                                <option key={voice.id} value={voice.id}>
+                                    {voice.name}
+                                </option>
+                            ))}
+                        </optgroup>
+                    )}
+                    {generated.length > 0 && (
+                        <optgroup label="Premium Neural (Free)">
+                            {generated.map((voice) => (
                                 <option key={voice.id} value={voice.id}>
                                     {voice.name}
                                 </option>
