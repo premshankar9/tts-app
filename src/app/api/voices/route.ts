@@ -50,6 +50,8 @@ export async function GET() {
         { id: "indic-malayalam", name: "Indic Malayalam (Natural - IIT Madras)", category: "elite" },
         { id: "indic-kannada", name: "Indic Kannada (Natural - IIT Madras)", category: "elite" },
         { id: "indic-bengali", name: "Indic Bengali (Natural - IIT Madras)", category: "elite" },
+        // Sherpa-ONNX Local Voices (Free & Offline)
+        { id: "sherpa-hindi", name: "Sherpa Hindi (Local - AI Offline)", category: "generated" },
     ];
 
     return NextResponse.json({ voices });

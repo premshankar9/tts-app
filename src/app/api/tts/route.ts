@@ -96,6 +96,77 @@ export async function POST(req: NextRequest) {
             }
         }
 
+        // Check for Sherpa-ONNX (Local) Voices - FREE & OFFLINE
+        if (voiceId.startsWith("sherpa-")) {
+            try {
+                const path = await import("path");
+                const fs = await import("fs");
+                const sherpa_onnx = await import("sherpa-onnx");
+
+                console.log(`[Sherpa Start] Voice: ${voiceId}`);
+
+                const modelDir = path.join(process.cwd(), "models", "sherpa-onnx", "vits-piper-hi_IN-pratham-medium");
+                const config = {
+                    offlineTts: {
+                        vits: {
+                            model: path.join(modelDir, "hi_IN-pratham-medium.onnx"),
+                            lexicon: "",
+                            tokens: path.join(modelDir, "tokens.txt"),
+                            dataDir: path.join(modelDir, "espeak-ng-data"),
+                            noiseScale: 0.667,
+                            noiseScaleW: 0.8,
+                            lengthScale: 1.0,
+                        },
+                        modelType: "vits",
+                        numThreads: 1,
+                        debug: 1,
+                    },
+                };
+
+                const tts = new sherpa_onnx.OfflineTts(config as any);
+                const result = tts.generate({ text: text, sid: 0, speed: 1.0 });
+
+                // Simple WAV header generation
+                const samples = result.samples;
+                const sampleRate = result.sampleRate;
+                const buffer = Buffer.alloc(44 + samples.length * 2);
+
+                // WAV Header
+                buffer.write("RIFF", 0);
+                buffer.writeUInt32LE(36 + samples.length * 2, 4);
+                buffer.write("WAVE", 8);
+                buffer.write("fmt ", 12);
+                buffer.writeUInt32LE(16, 16);
+                buffer.writeUInt16LE(1, 20); // PCM
+                buffer.writeUInt16LE(1, 22); // Mono
+                buffer.writeUInt32LE(sampleRate, 24);
+                buffer.writeUInt32LE(sampleRate * 2, 28);
+                buffer.writeUInt16LE(2, 32);
+                buffer.writeUInt16LE(16, 34);
+                buffer.write("data", 36);
+                buffer.writeUInt32LE(samples.length * 2, 40);
+
+                // Samples
+                for (let i = 0; i < samples.length; i++) {
+                    const s = Math.max(-1, Math.min(1, samples[i]));
+                    buffer.writeInt16LE(s < 0 ? s * 0x8000 : s * 0x7FFF, 44 + i * 2);
+                }
+
+                console.log(`[Sherpa Success] Generated ${buffer.length} bytes local audio`);
+                return new NextResponse(buffer, {
+                    headers: {
+                        "Content-Type": "audio/wav",
+                        "Content-Disposition": `attachment; filename="sherpa_speech.wav"`,
+                    },
+                });
+            } catch (sherpaError: any) {
+                console.error("[Sherpa Error Detail]:", sherpaError.message || sherpaError);
+                // Fallback to Google TTS
+                actualVoiceId = "hi";
+                console.warn("[Sherpa Fallback] Redirecting to Google TTS");
+            }
+        }
+
         // Check for Indic-TTS (AI4Bharat) Voices - FREE Natural
         if (voiceId.startsWith("indic-")) {
             try {

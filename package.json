@@ -19,6 +19,7 @@
     "next": "16.1.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "sherpa-onnx": "^1.12.24",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
