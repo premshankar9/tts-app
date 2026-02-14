@@ -96,6 +96,57 @@ export async function POST(req: NextRequest) {
             }
         }
 
+        // Check for XTTS-v2 (Hugging Face) Voices - FREE Elite
+        if (voiceId.startsWith("xtts-")) {
+            try {
+                console.log(`[XTTS Start] Voice: ${voiceId}`);
+                const { Client } = await import("@gradio/client");
+                console.log(`[XTTS Request] Connecting to Hugging Face...`);
+
+                // Connect to a stable XTTS-v2 Space
+                const app = await Client.connect("lucataco/xtts-v2");
+                console.log(`[XTTS Connected] Predicting for text: "${text.substring(0, 30)}..."`);
+
+                const langCode = voiceId === "xtts-hindi" ? "hi" : "en";
+
+                // Use a default reference audio for premade XTTS voices
+                // We'll use a silent or neutral sample if possible, but Gradio usually needs a valid file.
+                // For now, we'll try to find a public reference or handle it.
+                // NOTE: lucataco/xtts-v2 requires [text, language, reference_audio, use_mic, use_cleanup, overlap_threshold]
+
+                const result = await app.predict("/predict", [
+                    text,      // text
+                    langCode,  // language
+                    "https://github.com/gradio-app/gradio/raw/main/test/test_files/audio_sample.wav", // default_reference_audio
+                    false,     // use_mic
+                    true,      // use_cleanup
+                    0          // overlap_threshold
+                ]);
+
+                console.log("[XTTS Result] Received prediction result");
+                const audioResult = (result as any).data[0];
+                if (!audioResult || !audioResult.url) {
+                    throw new Error("XTTS engine returned no audio URL");
+                }
+
+                const audioRes = await fetch(audioResult.url);
+                const buffer = Buffer.from(await audioRes.arrayBuffer());
+
+                console.log(`[XTTS Success] Generated ${buffer.length} bytes`);
+                return new NextResponse(buffer, {
+                    headers: {
+                        "Content-Type": "audio/wav",
+                        "Content-Disposition": `attachment; filename="xtts_speech.wav"`,
+                    },
+                });
+            } catch (xttsError: any) {
+                console.error("[XTTS Error Detail]:", xttsError.message || xttsError);
+                // Fallback to Google TTS language code
+                actualVoiceId = voiceId === "xtts-hindi" ? "hi" : "en";
+                console.warn(`[XTTS Fallback] Redirecting to Google TTS (${actualVoiceId})`);
+            }
+        }
+
         // Check for Sarvam AI (Elite) Voices
         if (voiceId.startsWith("sarvam-")) {
             const sarvamApiKey = process.env.SARVAM_API_KEY;

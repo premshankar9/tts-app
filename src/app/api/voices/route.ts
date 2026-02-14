@@ -38,8 +38,11 @@ export async function GET() {
         { id: "ml-IN-SobhanaNeural", name: "Malayalam (Edge Sobhana)", category: "generated" },
         { id: "mr-IN-ManoharNeural", name: "Marathi (Edge Manohar)", category: "generated" },
         { id: "bn-IN-BashkarNeural", name: "Bengali (Edge Bashkar)", category: "generated" },
-        { id: "bn-IN-TanishaaNeural", name: "Bengali (Edge Tanishaa)", category: "generated" },
-        { id: "gu-IN-DhwaniNeural", name: "Gujarati (Edge Dhwani)", category: "generated" },
+        { id: "bn-IN-TanishaaNeural", name: "Tanishaa (Female Natural)", category: "generated" },
+        { id: "gu-IN-DhwaniNeural", name: "Dhwani (Female Natural)", category: "generated" },
+        // XTTS-v2 via Hugging Face (Free Elite)
+        { id: "xtts-hindi", name: "XTTS Hindi (Elite - AI Powered)", category: "elite" },
+        { id: "xtts-english", name: "XTTS English (Elite - AI Powered)", category: "elite" },
     ];
 
     return NextResponse.json({ voices });
