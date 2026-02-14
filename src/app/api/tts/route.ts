@@ -89,9 +89,10 @@ export async function POST(req: NextRequest) {
                     },
                 });
             } catch (edgeError: any) {
-                console.warn(`Edge TTS Failed (${edgeError.message}) - Falling back to Google TTS`);
+                console.error(`[Edge TTS Error] Voice: ${voiceId}, Error: ${edgeError.message}`);
                 // Map Edge voice ID to Google language code (e.g. "hi" from "hi-IN-...")
                 actualVoiceId = voiceId.split('-')[0];
+                console.log(`[Edge TTS Fallback] Attempting fallback to Google TTS with voice info: ${actualVoiceId}`);
             }
         }
 
@@ -99,6 +100,7 @@ export async function POST(req: NextRequest) {
         if (voiceId.startsWith("sarvam-")) {
             const sarvamApiKey = process.env.SARVAM_API_KEY;
             if (!sarvamApiKey) {
+                console.error("[Sarvam AI Error] SARVAM_API_KEY is missing in environment variables.");
                 return NextResponse.json(
                     { error: "Sarvam AI API Key is missing. Please set SARVAM_API_KEY in environment variables." },
                     { status: 401 }
@@ -106,6 +108,7 @@ export async function POST(req: NextRequest) {
             }
 
             try {
+                console.log(`[Sarvam AI Request] Voice: ${voiceId}, Text length: ${text.length}`);
                 const speaker = voiceId === "sarvam-hindi-female" ? "ritu" : "aditya";
                 const sarvamRes = await fetch("https://api.sarvam.ai/text-to-speech", {
                     method: "POST",
@@ -122,14 +125,22 @@ export async function POST(req: NextRequest) {
                 });
 
                 if (!sarvamRes.ok) {
-                    const error = await sarvamRes.json();
-                    throw new Error(error.message || "Sarvam AI API Error");
+                    const errorDetail = await sarvamRes.text();
+                    console.error(`[Sarvam AI API Error] Status: ${sarvamRes.status}, Detail: ${errorDetail}`);
+                    throw new Error(`Sarvam AI API Error: ${sarvamRes.status} - ${errorDetail}`);
                 }
 
                 const data = await sarvamRes.json();
+
+                if (!data.audios || !data.audios[0]) {
+                    console.error("[Sarvam AI Error] No audio content returned from API", data);
+                    throw new Error("No audio content returned from Sarvam AI");
+                }
+
                 const audioContent = data.audios[0];
                 const buffer = Buffer.from(audioContent, "base64");
 
+                console.log(`[Sarvam AI Success] Generated ${buffer.length} bytes of audio`);
                 return new NextResponse(buffer, {
                     headers: {
                         "Content-Type": "audio/mpeg",
@@ -137,13 +148,14 @@ export async function POST(req: NextRequest) {
                     },
                 });
             } catch (sarvamError: any) {
-                console.error("Sarvam AI Error:", sarvamError);
+                console.error("[Sarvam AI Catch Block]:", sarvamError);
                 return NextResponse.json(
                     { error: "Elite Voice Service Failed", detail: sarvamError.message },
                     { status: 500 }
                 );
             }
         }
+
 
         // Standard Google TTS path (or Fallback path)
         const targetVoiceId = actualVoiceId || voiceId;
