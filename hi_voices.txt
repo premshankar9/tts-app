@@ -1,0 +1,2 @@
+hi-IN-MadhurNeural (Male)
+hi-IN-SwaraNeural (Female)
