@@ -6,7 +6,7 @@ import { ChevronsUpDown } from "lucide-react";
 export interface Voice {
     id: string;
     name: string;
-    category: "premade" | "cloned" | "generated";
+    category: "premade" | "cloned" | "generated" | "elite";
 }
 
 interface VoiceSelectorProps {
@@ -21,6 +21,7 @@ export function VoiceSelector({ voices = [], selectedVoiceId, onVoiceSelect, isL
     const premade = voices.filter(v => v.category === "premade");
     const generated = voices.filter(v => v.category === "generated");
     const cloned = voices.filter(v => v.category === "cloned");
+    const elite = voices.filter(v => v.category === "elite");
 
     return (
         <div className="relative w-full">
@@ -33,9 +34,9 @@ export function VoiceSelector({ voices = [], selectedVoiceId, onVoiceSelect, isL
                     disabled={isLoading}
                 >
                     <option value="" disabled>Select a voice...</option>
-                    {premade.length > 0 && (
-                        <optgroup label="Basic Voices (Free)">
-                            {premade.map((voice) => (
+                    {elite.length > 0 && (
+                        <optgroup label="Elite Voices (Ultra Natural)">
+                            {elite.map((voice) => (
                                 <option key={voice.id} value={voice.id}>
                                     {voice.name}
                                 </option>
@@ -45,6 +46,15 @@ export function VoiceSelector({ voices = [], selectedVoiceId, onVoiceSelect, isL
                     {generated.length > 0 && (
                         <optgroup label="Premium Neural (Free)">
                             {generated.map((voice) => (
+                                <option key={voice.id} value={voice.id}>
+                                    {voice.name}
+                                </option>
+                            ))}
+                        </optgroup>
+                    )}
+                    {premade.length > 0 && (
+                        <optgroup label="Basic Voices (Free)">
+                            {premade.map((voice) => (
                                 <option key={voice.id} value={voice.id}>
                                     {voice.name}
                                 </option>

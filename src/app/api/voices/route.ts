@@ -16,8 +16,18 @@ export async function GET() {
         { id: "ru-RU", name: "Russian", category: "premade" },
         { id: "hi-IN", name: "Hindi (Google)", category: "premade" },
         // Microsoft Edge Neural Voices (Free & Keyless)
-        { id: "hi-IN-MadhurNeural", name: "Hindi (Edge Madhur)", category: "generated" },
-        { id: "hi-IN-SwaraNeural", name: "Hindi (Edge Swara)", category: "generated" },
+        // Microsoft Edge Neural Voices (Free)
+        { id: "hi-IN-MadhurNeural", name: "Madhur (Male Professional)", category: "generated" },
+        { id: "hi-IN-SwaraNeural", name: "Swara (Female Natural)", category: "generated" },
+        { id: "hi-IN-AnanyaNeural", name: "Ananya (Female Bright)", category: "generated" },
+        { id: "hi-IN-AaravNeural", name: "Aarav (Male Calm)", category: "generated" },
+        { id: "hi-IN-KajalNeural", name: "Kajal (Female Narrator)", category: "generated" },
+        { id: "hi-IN-HemantNeural", name: "Hemant (Male Bold)", category: "generated" },
+        { id: "en-IN-NeerjaNeural", name: "English IN (Neerja - Professional)", category: "generated" },
+        { id: "en-IN-PrabhatNeural", name: "English IN (Prabhat - Natural)", category: "generated" },
+        // Sarvam AI Bulbul Voices (Premium/Elite)
+        { id: "sarvam-hindi-female", name: "Bulbul Female (Elite - Ultra Natural)", category: "elite" },
+        { id: "sarvam-hindi-male", name: "Bulbul Male (Elite - Ultra Natural)", category: "elite" },
         { id: "ta-IN-PallaviNeural", name: "Tamil (Edge Pallavi)", category: "generated" },
         { id: "ta-IN-ValluvarNeural", name: "Tamil (Edge Valluvar)", category: "generated" },
         { id: "te-IN-MohanNeural", name: "Telugu (Edge Mohan)", category: "generated" },

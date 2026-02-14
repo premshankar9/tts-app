@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json();
-        const { text, voiceId } = body;
+        const { text, voiceId, pitch = 0, rate = 0 } = body;
 
         if (!text || !voiceId) {
             return NextResponse.json(
@@ -59,7 +59,17 @@ export async function POST(req: NextRequest) {
             try {
                 // Use edge-tts-universal for high quality free neural voices
                 const { EdgeTTS } = await import("edge-tts-universal");
-                const tts = new EdgeTTS(text, voiceId);
+
+                // Format pitch and rate for Edge TTS
+                // Pitch: +0Hz, -5Hz, etc.
+                // Rate: +0%, -10%, etc.
+                const formattedPitch = `${pitch >= 0 ? '+' : ''}${pitch}Hz`;
+                const formattedRate = `${rate >= 0 ? '+' : ''}${rate}%`;
+
+                const tts = new EdgeTTS(text, voiceId, {
+                    pitch: formattedPitch,
+                    rate: formattedRate
+                });
 
                 // Add a 15s timeout for synthesis to prevent indefinite hangs
                 const synthesisPromise = tts.synthesize();
@@ -82,6 +92,56 @@ export async function POST(req: NextRequest) {
                 console.warn(`Edge TTS Failed (${edgeError.message}) - Falling back to Google TTS`);
                 // Map Edge voice ID to Google language code (e.g. "hi" from "hi-IN-...")
                 actualVoiceId = voiceId.split('-')[0];
+            }
+        }
+
+        // Check for Sarvam AI (Elite) Voices
+        if (voiceId.startsWith("sarvam-")) {
+            const sarvamApiKey = process.env.SARVAM_API_KEY;
+            if (!sarvamApiKey) {
+                return NextResponse.json(
+                    { error: "Sarvam AI API Key is missing. Please set SARVAM_API_KEY in environment variables." },
+                    { status: 401 }
+                );
+            }
+
+            try {
+                const speaker = voiceId === "sarvam-hindi-female" ? "ritu" : "aditya";
+                const sarvamRes = await fetch("https://api.sarvam.ai/text-to-speech", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "api-subscription-key": sarvamApiKey
+                    },
+                    body: JSON.stringify({
+                        inputs: [text],
+                        target_language_code: "hi-IN",
+                        speaker: speaker,
+                        model: "bulbul:v3"
+                    })
+                });
+
+                if (!sarvamRes.ok) {
+                    const error = await sarvamRes.json();
+                    throw new Error(error.message || "Sarvam AI API Error");
+                }
+
+                const data = await sarvamRes.json();
+                const audioContent = data.audios[0];
+                const buffer = Buffer.from(audioContent, "base64");
+
+                return new NextResponse(buffer, {
+                    headers: {
+                        "Content-Type": "audio/mpeg",
+                        "Content-Disposition": `attachment; filename="sarvam_speech.mp3"`,
+                    },
+                });
+            } catch (sarvamError: any) {
+                console.error("Sarvam AI Error:", sarvamError);
+                return NextResponse.json(
+                    { error: "Elite Voice Service Failed", detail: sarvamError.message },
+                    { status: 500 }
+                );
             }
         }
 

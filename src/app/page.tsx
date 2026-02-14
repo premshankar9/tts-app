@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 interface Voice {
     id: string;
     name: string;
-    category: "premade" | "cloned" | "generated";
+    category: "premade" | "cloned" | "generated" | "elite";
 }
 
 export default function Home() {
@@ -75,11 +75,15 @@ export default function Home() {
                     body: formData
                 });
             } else {
-                // 1. Fetch the base audio from our proxy
                 res = await fetch('/api/tts', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text, voiceId: selectedVoice })
+                    body: JSON.stringify({
+                        text,
+                        voiceId: selectedVoice,
+                        pitch,
+                        rate
+                    })
                 });
             }
 
@@ -90,46 +94,10 @@ export default function Home() {
 
             const arrayBuffer = await res.arrayBuffer();
 
-            // 2. Process Audio if pitch or rate is changed (only for standard mode)
-            if (!isCloneMode && (pitch !== 0 || rate !== 0)) {
-                const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-                const decodedData = await audioCtx.decodeAudioData(arrayBuffer);
-
-                // Calculate new duration
-                // rate +10% means 1.1x speed, so duration / 1.1
-                const speedFactor = 1 + (rate / 100);
-                // pitch +10% means 1.1x playback rate
-                const pitchFactor = 1 + (pitch / 100);
-
-                // For simplicity, we'll use playbackRate for both since high-quality pitch shifting 
-                // in real-time is complex. This will affect both pitch and speed together.
-                // This creates the "Custom Voice" effect.
-                const totalFactor = speedFactor * pitchFactor;
-
-                const offlineCtx = new OfflineAudioContext(
-                    decodedData.numberOfChannels,
-                    decodedData.length / totalFactor,
-                    decodedData.sampleRate
-                );
-
-                const source = offlineCtx.createBufferSource();
-                source.buffer = decodedData;
-                source.playbackRate.value = totalFactor;
-                source.connect(offlineCtx.destination);
-                source.start();
-
-                const renderedBuffer = await offlineCtx.startRendering();
-
-                // 3. Convert rendered buffer to Blob (WAV format)
-                const wavBlob = bufferToWav(renderedBuffer);
-                const url = URL.createObjectURL(wavBlob);
-                setAudioUrl(url);
-            } else {
-                // No changes, use as is
-                const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
-                const url = URL.createObjectURL(blob);
-                setAudioUrl(url);
-            }
+            // Use the server-side generated audio directly for better quality
+            const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
+            const url = URL.createObjectURL(blob);
+            setAudioUrl(url);
 
         } catch (error) {
             console.error("Failed to generate audio", error);
