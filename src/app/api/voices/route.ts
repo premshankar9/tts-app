@@ -43,6 +43,13 @@ export async function GET() {
         // XTTS-v2 via Hugging Face (Free Elite)
         { id: "xtts-hindi", name: "XTTS Hindi (Elite - AI Powered)", category: "elite" },
         { id: "xtts-english", name: "XTTS English (Elite - AI Powered)", category: "elite" },
+        // Indic-TTS via AI4Bharat (IIT Madras)
+        { id: "indic-hindi", name: "Indic Hindi (Natural - IIT Madras)", category: "elite" },
+        { id: "indic-tamil", name: "Indic Tamil (Natural - IIT Madras)", category: "elite" },
+        { id: "indic-telugu", name: "Indic Telugu (Natural - IIT Madras)", category: "elite" },
+        { id: "indic-malayalam", name: "Indic Malayalam (Natural - IIT Madras)", category: "elite" },
+        { id: "indic-kannada", name: "Indic Kannada (Natural - IIT Madras)", category: "elite" },
+        { id: "indic-bengali", name: "Indic Bengali (Natural - IIT Madras)", category: "elite" },
     ];
 
     return NextResponse.json({ voices });

@@ -96,6 +96,53 @@ export async function POST(req: NextRequest) {
             }
         }
 
+        // Check for Indic-TTS (AI4Bharat) Voices - FREE Natural
+        if (voiceId.startsWith("indic-")) {
+            try {
+                const { Client } = await import("@gradio/client");
+                console.log(`[Indic-TTS Request] Voice: ${voiceId}, Text: "${text.substring(0, 30)}..."`);
+
+                // Connect to AI4Bharat Indic-Parler-TTS Space
+                const app = await Client.connect("ai4bharat/Indic-Parler-TTS");
+
+                // Default description for high quality speech
+                const description = "The speaker speaks naturally. The recording is very high quality with no background noise.";
+
+                // ai4bharat/Indic-Parler-TTS expects: [text, description]
+                const result = await app.predict("/predict", [
+                    text,        // input text
+                    description  // voice description prompt
+                ]);
+
+                console.log("[Indic-TTS Result] Received prediction result");
+                const audioResult = (result as any).data[0];
+                if (!audioResult || !audioResult.url) {
+                    throw new Error("Indic-TTS engine returned no audio URL");
+                }
+
+                const audioRes = await fetch(audioResult.url);
+                const buffer = Buffer.from(await audioRes.arrayBuffer());
+
+                console.log(`[Indic-TTS Success] Generated ${buffer.length} bytes`);
+                return new NextResponse(buffer, {
+                    headers: {
+                        "Content-Type": "audio/wav",
+                        "Content-Disposition": `attachment; filename="indic_speech.wav"`,
+                    },
+                });
+            } catch (indicError: any) {
+                console.error("[Indic-TTS Error Detail]:", indicError.message || indicError);
+                // Fallback to Google TTS language code (e.g. "hi" from "indic-hindi")
+                actualVoiceId = voiceId.split('-')[1] === "hindi" ? "hi" :
+                    voiceId.split('-')[1] === "tamil" ? "ta" :
+                        voiceId.split('-')[1] === "telugu" ? "te" :
+                            voiceId.split('-')[1] === "malayalam" ? "ml" :
+                                voiceId.split('-')[1] === "kannada" ? "kn" :
+                                    voiceId.split('-')[1] === "bengali" ? "bn" : "hi";
+                console.warn(`[Indic-TTS Fallback] Redirecting to Google TTS (${actualVoiceId})`);
+            }
+        }
+
         // Check for XTTS-v2 (Hugging Face) Voices - FREE Elite
         if (voiceId.startsWith("xtts-")) {
             try {
